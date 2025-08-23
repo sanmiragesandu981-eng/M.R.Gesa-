@@ -1,44 +1,15 @@
 const express = require("express");
 const app = express();
-__path = process.cwd();
-const bodyParser = require("body-parser");
+const path = require("path");
 const PORT = process.env.PORT || 8000;
 
-// Branding Info
-const BOT_NAME = "🤖 M.R.Gesa";
-const BOT_LOGO = "brand.png"; // save logo in root folder
+const pairRoute = require("./pair"); // The router we made
 
-// Pair system
-let code = require("./pair");
-
-// Increase listener limit to avoid memory leaks
-require("events").EventEmitter.defaultMaxListeners = 500;
-
-// Middleware
-app.use("/code", code);
-
-// Root route → branding page
-app.use("/", async (req, res, next) => {
-  res.sendFile(__path + "/pair.html");
+app.use("/code", pairRoute);
+app.use("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "pair.html"));
 });
 
-// Parsers
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// Banner function
-function printBanner() {
-  console.clear();
-  console.log("=================================");
-  console.log(`🚀 ${BOT_NAME} Server is starting...`);
-  console.log(`📡 Listening on: http://localhost:${PORT}`);
-  console.log(`🖼️ Logo: ${BOT_LOGO}`);
-  console.log("=================================");
-}
-
-// Start server
 app.listen(PORT, () => {
-  printBanner();
+  console.log(`🚀 M.R.Gesa Web Pair running on http://localhost:${PORT}`);
 });
-
-module.exports = app;
