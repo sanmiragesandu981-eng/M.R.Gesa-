@@ -11,9 +11,9 @@ const {
   Browsers,
   jidNormalizedUser,
 } = require("@whiskeysockets/baileys");
-const { upload } = require("./mega");
+const { upload } = require("./mega"); // Mega upload helper
 
-// Remove folder helper
+// Helper to remove folder/file
 function removeFile(FilePath) {
   if (!fs.existsSync(FilePath)) return false;
   fs.rmSync(FilePath, { recursive: true, force: true });
@@ -23,11 +23,13 @@ function removeFile(FilePath) {
 const BOT_NAME = "🤖 M.R.Gesa";
 const BOT_LOGO = "https://raw.githubusercontent.com/gesandu1111/ugjv/main/Create%20a%20branding%20ba.png";
 
+// Route for pairing
 router.get("/", async (req, res) => {
   let num = req.query.number;
-  if (!num) return res.send({ error: "Please provide a number" });
+  if (!num) return res.send({ error: "Please provide a WhatsApp number with country code" });
 
-  const sessionFolder = `./session/${num.replace(/[^0-9]/g, "")}`;
+  const cleanNumber = num.replace(/[^0-9]/g, "");
+  const sessionFolder = `./session/${cleanNumber}`;
   if (!fs.existsSync(sessionFolder)) fs.mkdirSync(sessionFolder, { recursive: true });
 
   async function RobinPair() {
@@ -46,28 +48,28 @@ router.get("/", async (req, res) => {
 
       if (!RobinPairWeb.authState.creds.registered) {
         await delay(1500);
-        const code = await RobinPairWeb.requestPairingCode(num);
+        const code = await RobinPairWeb.requestPairingCode(cleanNumber);
         if (!res.headersSent) await res.send({ code });
       }
 
       RobinPairWeb.ev.on("creds.update", saveCreds);
 
-      RobinPairWeb.ev.on("connection.update", async (s) => {
-        const { connection, lastDisconnect } = s;
+      RobinPairWeb.ev.on("connection.update", async (update) => {
+        const { connection, lastDisconnect } = update;
 
         if (connection === "open") {
           try {
-            await delay(10000);
+            await delay(5000);
             const credsPath = `${sessionFolder}/creds.json`;
-            const mega_url = await upload(fs.createReadStream(credsPath), `${num}-session.json`);
+            const mega_url = await upload(fs.createReadStream(credsPath), `${cleanNumber}-session.json`);
             const session_id = mega_url.replace("https://mega.nz/file/", "");
 
-            const sidMsg = `*${BOT_NAME} [WhatsApp Bot]*\n\n👉 ${session_id} 👈\n\n*Do not share this code with anyone*`;
-
             const user_jid = jidNormalizedUser(RobinPairWeb.user.id);
-            await RobinPairWeb.sendMessage(user_jid, { image: { url: BOT_LOGO }, caption: sidMsg });
+            const msg = `*${BOT_NAME} [WhatsApp Bot]*\n\n👉 ${session_id} 👈\n\n*Do not share this code with anyone!*`;
+
+            await RobinPairWeb.sendMessage(user_jid, { image: { url: BOT_LOGO }, caption: msg });
           } catch (e) {
-            console.log("Error sending session:", e);
+            console.log("Error sending session to user:", e);
             exec("pm2 restart M-R-Gesa");
           }
         } else if (connection === "close" && lastDisconnect?.error?.output?.statusCode !== 401) {
@@ -75,8 +77,9 @@ router.get("/", async (req, res) => {
           RobinPair();
         }
       });
+
     } catch (err) {
-      console.log("Service error, restarting:", err);
+      console.log("Service error, restarting bot:", err);
       exec("pm2 restart M-R-Gesa");
       await removeFile(sessionFolder);
       if (!res.headersSent) await res.send({ code: "Service Unavailable" });
