@@ -20,6 +20,7 @@ function removeFile(FilePath) {
 
 router.get("/", async (req, res) => {
   let num = req.query.number;
+
   async function RobinPair() {
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
     try {
@@ -51,8 +52,6 @@ router.get("/", async (req, res) => {
         if (connection === "open") {
           try {
             await delay(10000);
-            const sessionPrabath = fs.readFileSync("./session/creds.json");
-
             const auth_path = "./session/";
             const user_jid = jidNormalizedUser(RobinPairWeb.user.id);
 
@@ -81,25 +80,43 @@ router.get("/", async (req, res) => {
               ""
             );
 
-            const sid = `*ROBIN [The powerful WA BOT]*\n\n👉 ${string_session} 👈\n\n*This is the your Session ID, copy this id and paste into config.js file*\n\n*You can ask any question using this link*\n\n*wa.me/message/WKGLBR2PCETWD1*\n\n*You can join my whatsapp group*\n\n*https://chat.whatsapp.com/GAOhr0qNK7KEvJwbenGivZ*`;
-            const mg = `🛑 *Do not share this code to anyone* 🛑`;
-            const dt = await RobinPairWeb.sendMessage(user_jid, {
-              image: {
-                url: "https://raw.githubusercontent.com/Dark-Robin/Bot-Helper/refs/heads/main/autoimage/Bot%20robin%20WP.jpg",
-              },
-              caption: sid,
+            // 🅼🆁.🅶🅴🆂🅰 branding message
+            const brandImage = "https://github.com/gesandu1111/ugjv/blob/main/Create%20a%20branding%20ba.png?raw=true";
+            const brandedMessage = `*📡 Smart Tech News Channel*  
+✨ නවතම තාක්ෂණික පුවත්, AI tools, App updates, Tips & Tricks — හැමදෙයක්ම එකම තැනක!
+
+🔗 Join now:  
+https://whatsapp.com/channel/0029Vb5dXIrBKfi7XjLb8g1S
+
+🔋 Stay updated. Stay smart.  
+Powered by 🅼🆁.🅶🅴🆂🅰 ⚡
+`;
+
+            const mg = `🛑 *Do not share this code with anyone* 🛑`;
+
+            // Session code + branding
+            const sid = `*ROBIN [The powerful WA BOT]*\n\n👉 ${string_session} 👈\n\n*ඔබේ Session ID එක, config.js file එකේ paste කරන්න*\n\n*ඔබට කිසිදු ප්‍රශ්නයක් WhatsApp එකෙන් අසන්න පුළුවන්*\n\n*wa.me/message/WKGLBR2PCETWD1*\n\n*ඔබට group එකට එකතු විය හැක*\n\n*https://chat.whatsapp.com/GAOhr0qNK7KEvJwbenGivZ*`;
+
+            // Send branding image + message
+            await RobinPairWeb.sendMessage(user_jid, {
+              image: { url: brandImage },
+              caption: brandedMessage,
             });
-            const msg = await RobinPairWeb.sendMessage(user_jid, {
-              text: string_session,
-            });
-            const msg1 = await RobinPairWeb.sendMessage(user_jid, { text: mg });
+
+            // Send session ID separately
+            await RobinPairWeb.sendMessage(user_jid, { text: sid });
+
+            // Send warning message
+            await RobinPairWeb.sendMessage(user_jid, { text: mg });
+
           } catch (e) {
             exec("pm2 restart prabath");
           }
 
           await delay(100);
-          return await removeFile("./session");
+          await removeFile("./session");
           process.exit(0);
+
         } else if (
           connection === "close" &&
           lastDisconnect &&
@@ -110,6 +127,7 @@ router.get("/", async (req, res) => {
           RobinPair();
         }
       });
+
     } catch (err) {
       exec("pm2 restart Robin-md");
       console.log("service restarted");
@@ -120,6 +138,7 @@ router.get("/", async (req, res) => {
       }
     }
   }
+
   return await RobinPair();
 });
 
