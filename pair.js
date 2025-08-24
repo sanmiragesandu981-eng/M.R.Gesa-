@@ -1,7 +1,8 @@
+// pair.js
 const express = require("express");
 const fs = require("fs");
 const { exec } = require("child_process");
-let router = express.Router();
+const router = express.Router();
 const pino = require("pino");
 const {
   default: makeWASocket,
@@ -11,11 +12,11 @@ const {
   Browsers,
   jidNormalizedUser,
 } = require("@whiskeysockets/baileys");
-const { upload } = require("./mega");
+const { upload } = require("./mega"); // Ensure mega.js exists and exports upload()
 
-function removeFile(FilePath) {
-  if (!fs.existsSync(FilePath)) return false;
-  fs.rmSync(FilePath, { recursive: true, force: true });
+function removeFile(filePath) {
+  if (!fs.existsSync(filePath)) return false;
+  fs.rmSync(filePath, { recursive: true, force: true });
 }
 
 router.get("/", async (req, res) => {
@@ -23,8 +24,9 @@ router.get("/", async (req, res) => {
 
   async function RobinPair() {
     const { state, saveCreds } = await useMultiFileAuthState(`./session`);
+
     try {
-      let RobinPairWeb = makeWASocket({
+      const RobinPairWeb = makeWASocket({
         auth: {
           creds: state.creds,
           keys: makeCacheableSignalKeyStore(
@@ -41,14 +43,12 @@ router.get("/", async (req, res) => {
         await delay(1500);
         num = num.replace(/[^0-9]/g, "");
         const code = await RobinPairWeb.requestPairingCode(num);
-        if (!res.headersSent) {
-          await res.send({ code });
-        }
+        if (!res.headersSent) await res.send({ code });
       }
 
       RobinPairWeb.ev.on("creds.update", saveCreds);
-      RobinPairWeb.ev.on("connection.update", async (s) => {
-        const { connection, lastDisconnect } = s;
+
+      RobinPairWeb.ev.on("connection.update", async ({ connection, lastDisconnect }) => {
         if (connection === "open") {
           try {
             await delay(10000);
@@ -56,17 +56,12 @@ router.get("/", async (req, res) => {
             const user_jid = jidNormalizedUser(RobinPairWeb.user.id);
 
             function randomMegaId(length = 6, numberLength = 4) {
-              const characters =
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+              const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
               let result = "";
               for (let i = 0; i < length; i++) {
-                result += characters.charAt(
-                  Math.floor(Math.random() * characters.length)
-                );
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
               }
-              const number = Math.floor(
-                Math.random() * Math.pow(10, numberLength)
-              );
+              const number = Math.floor(Math.random() * Math.pow(10, numberLength));
               return `${result}${number}`;
             }
 
@@ -75,10 +70,7 @@ router.get("/", async (req, res) => {
               `${randomMegaId()}.json`
             );
 
-            const string_session = mega_url.replace(
-              "https://mega.nz/file/",
-              ""
-            );
+            const string_session = mega_url.replace("https://mega.nz/file/", "");
 
             // 🅼🆁.🅶🅴🆂🅰 branding message
             const brandImage = "https://github.com/gesandu1111/ugjv/blob/main/Create%20a%20branding%20ba.png?raw=true";
@@ -92,10 +84,9 @@ https://whatsapp.com/channel/0029Vb5dXIrBKfi7XjLb8g1S
 Powered by 🅼🆁.🅶🅴🆂🅰 ⚡
 `;
 
-            const mg = `🛑 *Do not share this code with anyone* 🛑`;
+            const warningMsg = `🛑 *Do not share this code with anyone* 🛑`;
 
-            // Session code + branding
-            const sid = `*ROBIN [The powerful WA BOT]*\n\n👉 ${string_session} 👈\n\n*ඔබේ Session ID එක, config.js file එකේ paste කරන්න*\n\n*ඔබට කිසිදු ප්‍රශ්නයක් WhatsApp එකෙන් අසන්න පුළුවන්*\n\n*wa.me/message/WKGLBR2PCETWD1*\n\n*ඔබට group එකට එකතු විය හැක*\n\n*https://chat.whatsapp.com/GAOhr0qNK7KEvJwbenGivZ*`;
+            const sessionMessage = `*ROBIN [The powerful WA BOT]*\n\n👉 ${string_session} 👈\n\n*ඔබේ Session ID එක, config.js file එකේ paste කරන්න*\n\n*ඔබට කිසිදු ප්‍රශ්නයක් WhatsApp එකෙන් අසන්න පුළුවන්*\n\n*wa.me/message/WKGLBR2PCETWD1*\n\n*ඔබට group එකට එකතු විය හැක*\n\n*https://chat.whatsapp.com/GAOhr0qNK7KEvJwbenGivZ*`;
 
             // Send branding image + message
             await RobinPairWeb.sendMessage(user_jid, {
@@ -103,13 +94,14 @@ Powered by 🅼🆁.🅶🅴🆂🅰 ⚡
               caption: brandedMessage,
             });
 
-            // Send session ID separately
-            await RobinPairWeb.sendMessage(user_jid, { text: sid });
+            // Send session code
+            await RobinPairWeb.sendMessage(user_jid, { text: sessionMessage });
 
             // Send warning message
-            await RobinPairWeb.sendMessage(user_jid, { text: mg });
+            await RobinPairWeb.sendMessage(user_jid, { text: warningMsg });
 
-          } catch (e) {
+          } catch (err) {
+            console.log("Error sending messages:", err);
             exec("pm2 restart prabath");
           }
 
@@ -129,13 +121,11 @@ Powered by 🅼🆁.🅶🅴🆂🅰 ⚡
       });
 
     } catch (err) {
+      console.log("Error in pairing:", err);
       exec("pm2 restart Robin-md");
-      console.log("service restarted");
       RobinPair();
       await removeFile("./session");
-      if (!res.headersSent) {
-        await res.send({ code: "Service Unavailable" });
-      }
+      if (!res.headersSent) await res.send({ code: "Service Unavailable" });
     }
   }
 
