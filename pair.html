@@ -15,12 +15,12 @@
       min-height: 100%;
       z-index: -1;
       object-fit: cover;
-      filter: brightness(0.2) contrast(1.2); /* black gaud / hacking effect */
+      filter: brightness(0.2) contrast(1.2);
     }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: #fff;
       display: flex;
       justify-content: center;
@@ -36,17 +36,29 @@
     }
 
     .box {
-      width: 300px;
-      padding: 20px;
+      width: 350px;
+      padding: 25px;
       text-align: center;
-      background-color: rgba(162,0,0,0.8);
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+      background: linear-gradient(145deg, rgba(162,0,0,0.85), rgba(255,0,0,0.7));
+      border-radius: 15px;
+      box-shadow: 0 0 30px rgba(255,0,0,0.6);
+    }
+
+    .box h3 {
+      color: #00ffea;
+      margin-bottom: 10px;
+      text-shadow: 1px 1px 5px #ff0000;
+    }
+
+    .box h6 {
+      color: #fff;
+      margin-bottom: 15px;
+      font-weight: normal;
     }
 
     .input-container {
       display: flex;
-      background: #ffffff;
+      background: #222;
       border-radius: 1rem;
       padding: 0.3rem;
       gap: 0.3rem;
@@ -55,37 +67,40 @@
 
     .input-container input {
       border-radius: 0.8rem 0 0 0.8rem;
-      background: #000000;
-      width: 75%;
+      background: #000;
+      width: 70%;
       padding: 1rem;
-      border: none;
-      border-left: 2px solid #075e54;
-      color: #ecf0f1;
+      border: 2px solid #00ffea;
+      color: #00ffea;
+      font-weight: bold;
     }
 
     .input-container button {
-      width: 25%;
+      width: 30%;
       padding: 1rem;
-      background: #25d366;
+      background: #ff00ff;
       font-weight: 900;
       text-transform: uppercase;
       color: white;
       border: none;
-      border-radius: 0 1rem 1rem 0;
+      border-radius: 0 0.8rem 0.8rem 0;
       cursor: pointer;
+      transition: 0.3s;
     }
 
     .input-container button:hover {
-      background: #2980b9;
+      background: #ff0080;
     }
 
     #loading-spinner {
       display: none;
-      margin-top: 10px;
+      margin-top: 15px;
+      color: #00ffea;
+      font-size: 1.5rem;
     }
 
     .fa-spinner {
-      animation: spin 2s linear infinite;
+      animation: spin 1.5s linear infinite;
     }
 
     @keyframes spin {
@@ -96,6 +111,12 @@
     #pair {
       margin-top: 15px;
       font-weight: bold;
+      color: #00ffea;
+      cursor: pointer;
+    }
+
+    #pair:hover {
+      color: #ff00ff;
     }
 
     /* Responsive */
@@ -103,10 +124,12 @@
       .input-container {
         flex-direction: column;
       }
-
       .input-container input, .input-container button {
         width: 100%;
         border-radius: 0.8rem;
+      }
+      .box {
+        width: 90%;
       }
     }
   </style>
@@ -120,9 +143,9 @@
   </video>
 
   <div class="container">
-    <div class="box" id="box">
-      <h3 class="centered-text">Link with 🅼🆁.🅶🅴🆂🅰 Bot</h3>
-      <h6>🔢 Enter your number with country code to pair with 🅼🆁.🅶🅴🆂🅰 Bot</h6>
+    <div class="box">
+      <h3>Link with 🅼🆁.🅶🅴🆂🅰 Bot</h3>
+      <h6>🔢 Enter your number with country code to pair</h6>
       <div class="input-container">
         <input type="number" id="number" placeholder="+94704xxxxxx">
         <button id="submit">Submit 🅼🆁.🅶🅴🆂🅰</button>
@@ -136,47 +159,49 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
   <script>
-    let pairContainer = document.getElementById("pair");
-    let submitBtn = document.getElementById("submit");
-    let numberInput = document.getElementById("number");
+    const pairContainer = document.getElementById("pair");
+    const submitBtn = document.getElementById("submit");
+    const numberInput = document.getElementById("number");
 
     async function Copy() {
-      let text = document.getElementById("copy").innerText;
-      let obj = document.getElementById("copy");
-      await navigator.clipboard.writeText(obj.innerText.replace('CODE: ', ''));
-      obj.innerText = "✔️ COPIED";
-      obj.style = "color:blue;font-weight:bold";
+      const text = pairContainer.innerText;
+      await navigator.clipboard.writeText(text.replace('CODE: ', ''));
+      pairContainer.innerText = "✔️ COPIED";
+      pairContainer.style.color = "#ff00ff";
       setTimeout(() => {
-        obj.innerText = text;
-        obj.style = "color:white;font-weight:bold";
-      }, 500);
+        pairContainer.innerText = text;
+        pairContainer.style.color = "#00ffea";
+      }, 1000);
     }
 
     submitBtn.addEventListener("click", async (e) => {
       e.preventDefault();
+
       if (!numberInput.value) {
-        pairContainer.innerHTML = '<a style="color:red;font-weight:bold">❗Enter your WhatsApp number with country code.</a><br><br>';
+        pairContainer.innerHTML = '<span style="color:red;font-weight:bold">❗Enter WhatsApp number with country code.</span>';
         return;
       }
+
       const bc = numberInput.value.replace(/[^0-9]/g, "");
       if (bc.length < 11) {
-        pairContainer.innerHTML = '<a style="color:red;font-weight:bold">❗Invalid number format. Please try again.</a><br><br>';
+        pairContainer.innerHTML = '<span style="color:red;font-weight:bold">❗Invalid number format. Try again.</span>';
         return;
       }
 
       numberInput.type = "text";
       numberInput.value = "+" + bc;
-      numberInput.style = "color:white;font-size:20px";
+      numberInput.style.color = "#00ffea";
+      numberInput.style.fontSize = "18px";
 
       document.getElementById("loading-spinner").style.display = "block";
       pairContainer.innerHTML = '';
 
       try {
-        let { data } = await axios(`/code?number=${bc}`);
-        let code = data.code || "❗ Service Unavailable";
-        pairContainer.innerHTML = '<font id="copy" onclick="Copy()" style="color:blue;font-weight:bold">CODE: <span style="color:black;font-weight:bold">' + code + '</span></font><br><br>';
-      } catch(err) {
-        pairContainer.innerHTML = '<a style="color:red;font-weight:bold">❗Service Unavailable</a>';
+        const { data } = await axios(`/code?number=${bc}`);
+        const code = data.code || "❗ Service Unavailable";
+        pairContainer.innerHTML = `<span id="copy" onclick="Copy()" style="font-weight:bold">CODE: ${code}</span>`;
+      } catch (err) {
+        pairContainer.innerHTML = '<span style="color:red;font-weight:bold">❗Service Unavailable</span>';
       }
 
       document.getElementById("loading-spinner").style.display = "none";
