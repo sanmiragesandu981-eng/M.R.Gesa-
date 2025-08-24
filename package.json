@@ -1,10 +1,10 @@
 {
   "name": "Robin-web-pair",
   "version": "0.0.1",
-  "description": "A multi-functional WhatsApp bot Web paircode.",
+  "description": "A multi functional whatsapp bot Web paircode.",
   "main": "index.js",
   "scripts": {
-    "start": "pm2 start index.js --name Robin --watch --update-env",
+    "start": "pm2 start index.js --deep-monitoring --attach --name Robin",
     "stop": "pm2 stop Robin",
     "restart": "pm2 restart Robin",
     "dev": "nodemon index.js"
@@ -23,9 +23,9 @@
     "rimraf": "^6.0.1"
   },
   "devDependencies": {
-    "eslint": "^9.33.0",
     "@eslint/config-array": "^0.21.0",
     "@eslint/object-schema": "^2.1.6",
+    "eslint": "^9.33.0",
     "nodemon": "^3.0.2"
   },
   "author": "🅼🆁.🅶🅴🆂🅰",
